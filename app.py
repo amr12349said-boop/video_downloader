@@ -34,16 +34,16 @@ download_progress = {}
 YDL_COMMON = {
     'quiet': True,
     'no_warnings': True,
-    'extractor_args': {'youtube': {'player_client': ['android', 'web']}},
     'extractor_retries': 3,
+    'geo_bypass': True,
 }
 
 # Try multiple client strategies for YouTube
 YOUTUBE_CLIENTS = [
-    {'youtube': {'player_client': ['android']}},
-    {'youtube': {'player_client': ['android', 'web']}},
-    {'youtube': {'player_client': ['ios']}},
-    {'youtube': {'player_client': ['tv_embedded']}},
+    {'youtube': {'player_client': ['android'], 'player_skip': ['webpage', 'configs']}},
+    {'youtube': {'player_client': ['android', 'web'], 'player_skip': ['webpage']}},
+    {'youtube': {'player_client': ['ios'], 'player_skip': ['webpage']}},
+    {'youtube': {'player_client': ['web'], 'player_skip': ['webpage', 'configs']}},
 ]
 
 def ydl_extract(url, download=False, opts_extra=None):
