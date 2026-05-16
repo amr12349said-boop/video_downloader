@@ -38,6 +38,26 @@ YDL_COMMON = {
     'extractor_retries': 3,
 }
 
+# Try multiple client strategies for YouTube
+YOUTUBE_CLIENTS = [
+    {'youtube': {'player_client': ['android']}},
+    {'youtube': {'player_client': ['android', 'web']}},
+    {'youtube': {'player_client': ['ios']}},
+    {'youtube': {'player_client': ['tv_embedded']}},
+]
+
+def ydl_extract(url, download=False, opts_extra=None):
+    for client in YOUTUBE_CLIENTS:
+        opts = {**YDL_COMMON, 'extractor_args': client}
+        if opts_extra:
+            opts.update(opts_extra)
+        try:
+            with yt_dlp.YoutubeDL(opts) as ydl:
+                return ydl.extract_info(url, download=download)
+        except Exception:
+            continue
+    raise Exception('فشل جلب المعلومات من YouTube بعد تجربة كل الطرق')
+
 def get_config():
     if CONFIG_FILE.exists():
         with open(CONFIG_FILE, encoding="utf-8") as f:
@@ -125,8 +145,7 @@ def download_worker(url, format_id, task_id, opts_extra=None):
     fmt = format_id or cfg['format']
     try:
         write_status(task_id, {'status': 'fetching', 'msg': 'جاري جلب معلومات الفيديو...'})
-        with yt_dlp.YoutubeDL({**YDL_COMMON}) as ydl:
-            info = ydl.extract_info(url, download=False)
+        info = ydl_extract(url)
 
         platform_dir = get_platform_dir(info.get('extractor_key', 'Unknown'))
         title = info.get('title', 'video')
@@ -162,8 +181,7 @@ def download_worker(url, format_id, task_id, opts_extra=None):
             opts.update(opts_extra)
 
         write_status(task_id, {'status': 'downloading', 'msg': 'جاري التحميل...', 'percent': 0})
-        with yt_dlp.YoutubeDL(opts) as ydl:
-            ydl.extract_info(url, download=True)
+        ydl_extract(url, download=True, opts_extra=opts)
 
         actual_file = None
         for f in platform_dir.iterdir():
@@ -223,8 +241,7 @@ def get_info():
     if not url:
         return jsonify({'error': 'الرجاء إدخال رابط الفيديو'}), 400
     try:
-        with yt_dlp.YoutubeDL({**YDL_COMMON}) as ydl:
-            info = ydl.extract_info(url, download=False)
+        info = ydl_extract(url)
 
         formats = []
         seen = set()
