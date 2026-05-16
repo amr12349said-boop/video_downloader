@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الإعدادات - Video Downloader Pro</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background: #0d1117;
+            min-height: 100vh;
+            color: #e6edf3;
+        }
+        .nav {
+            background: #161b22; border-bottom: 1px solid #30363d; padding: 0 20px;
+            display: flex; align-items: center; height: 56px; gap: 24px;
+        }
+        .nav .brand { font-weight: 700; font-size: 18px; color: #f0e6d0; }
+        .nav .brand span { color: #58a6ff; }
+        .nav a { color: #8b949e; text-decoration: none; font-size: 14px; padding: 4px 12px; border-radius: 6px; transition: 0.15s; }
+        .nav a:hover { color: #e6edf3; background: #21262d; }
+        .nav a.active { color: #58a6ff; background: #1f2937; }
+
+        .container { max-width: 680px; margin: 0 auto; padding: 30px 20px; }
+        .card {
+            background: #161b22; border: 1px solid #30363d; border-radius: 12px;
+            padding: 24px; margin-bottom: 16px;
+        }
+        .card h2 { font-size: 17px; margin-bottom: 16px; color: #f0e6d0; }
+
+        .setting-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 0; border-bottom: 1px solid #21262d; gap: 16px;
+        }
+        .setting-row:last-child { border-bottom: none; }
+        .setting-row .label { font-size: 14px; }
+        .setting-row .desc { font-size: 12px; color: #8b949e; margin-top: 2px; }
+        .setting-row .control { flex-shrink: 0; }
+
+        select, input[type="text"], input[type="number"] {
+            padding: 8px 12px; border: 2px solid #30363d; border-radius: 6px;
+            background: #0d1117; color: #e6edf3; font-size: 13px; min-width: 180px; font-family: inherit;
+        }
+        select:focus, input:focus { outline: none; border-color: #58a6ff; }
+
+        .toggle {
+            width: 44px; height: 24px; background: #21262d; border-radius: 12px;
+            cursor: pointer; position: relative; transition: 0.2s; border: none; padding: 0;
+        }
+        .toggle.on { background: #238636; }
+        .toggle::after {
+            content: ''; position: absolute; top: 2px; width: 20px; height: 20px;
+            background: #e6edf3; border-radius: 50%; transition: 0.2s;
+        }
+        .toggle:not(.on)::after { right: 2px; }
+        .toggle.on::after { right: 22px; }
+
+        .btn {
+            padding: 10px 24px; border: none; border-radius: 8px; background: #238636;
+            color: #fff; font-weight: 600; font-size: 14px; cursor: pointer; transition: 0.2s; font-family: inherit;
+        }
+        .btn:hover { background: #2ea043; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .save-bar {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-top: 16px; padding-top: 16px; border-top: 1px solid #21262d;
+        }
+        .toast {
+            background: #002d3d; border: 1px solid #044289; border-radius: 8px;
+            padding: 8px 16px; font-size: 13px; color: #58a6ff; display: none;
+        }
+        .file-input-wrapper { display: flex; align-items: center; gap: 8px; }
+        .file-input-wrapper input[type="file"] { display: none; }
+        .file-input-wrapper .file-label {
+            padding: 6px 12px; background: #21262d; border-radius: 6px; font-size: 12px;
+            cursor: pointer; transition: 0.15s;
+        }
+        .file-input-wrapper .file-label:hover { background: #30363d; }
+        .file-input-wrapper .file-name { font-size: 12px; color: #8b949e; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+        .danger-zone { border-color: #8b1a1a; }
+        .danger-zone h2 { color: #f85149; }
+        .btn-danger { background: #3d0e0e; color: #f85149; }
+        .btn-danger:hover { background: #5c1414; }
+
+        @media (max-width: 500px) {
+            .container { padding: 16px 10px; }
+            .card { padding: 16px; }
+            .setting-row { flex-direction: column; align-items: flex-start; }
+            .setting-row .control { width: 100%; }
+            select, input { width: 100%; min-width: 0; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav">
+        <div class="brand">Video <span>Downloader</span> Pro</div>
+        <a href="/">الرئيسية</a>
+        <a href="/history">السجل</a>
+        <a href="/settings" class="active">الإعدادات</a>
+    </nav>
+
+    <div class="container">
+        <div class="card">
+            <h2>جودة التحميل</h2>
+            <div class="setting-row">
+                <div>
+                    <div class="label">الجودة الافتراضية</div>
+                    <div class="desc">الجودة التي سيتم التحميل بها عند الضغط على تحميل</div>
+                </div>
+                <div class="control">
+                    <select id="formatSelect">
+                        <option value="best[ext=mp4]/best">أفضل جودة MP4</option>
+                        <option value="bestvideo[height<=2160]+bestaudio/best[height<=2160]">4K (2160p)</option>
+                        <option value="bestvideo[height<=1080]+bestaudio/best[height<=1080]">Full HD (1080p)</option>
+                        <option value="bestvideo[height<=720]+bestaudio/best[height<=720]">HD (720p)</option>
+                        <option value="bestvideo[height<=480]+bestaudio/best[height<=480]">480p</option>
+                        <option value="bestvideo[height<=360]+bestaudio/best[height<=360]">360p</option>
+                        <option value="bestaudio[ext=m4a]/bestaudio">صوت فقط</option>
+                    </select>
+                </div>
+            </div>
+            <div class="setting-row">
+                <div>
+                    <div class="label">الدقة القصوى (بكسل)</div>
+                    <div class="desc">الحد الأقصى لارتفاع الفيديو</div>
+                </div>
+                <div class="control">
+                    <select id="maxHeight">
+                        <option value="360">360p</option>
+                        <option value="480">480p</option>
+                        <option value="720">720p</option>
+                        <option value="1080" selected>1080p</option>
+                        <option value="2160">2160p (4K)</option>
+                        <option value="4320">4320p (8K)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>خيارات التحميل</h2>
+            <div class="setting-row">
+                <div>
+                    <div class="label">الترجمة</div>
+                    <div class="desc">تحميل الترجمة تلقائياً مع الفيديو (إن وجدت)</div>
+                </div>
+                <div class="control">
+                    <button class="toggle" id="subtitlesToggle"></button>
+                </div>
+            </div>
+            <div class="setting-row">
+                <div>
+                    <div class="label">قائمة التشغيل</div>
+                    <div class="desc">تحميل كل فيديوهات قائمة التشغيل</div>
+                </div>
+                <div class="control">
+                    <button class="toggle" id="playlistToggle"></button>
+                </div>
+            </div>
+            <div class="setting-row">
+                <div>
+                    <div class="label">حد السرعة</div>
+                    <div class="desc">تحديد سرعة التحميل القصوى (مثال: 1M = 1 ميجابايت/ثانية)</div>
+                </div>
+                <div class="control">
+                    <input type="text" id="limitSpeed" placeholder="مثال: 5M" style="min-width:120px;">
+                </div>
+            </div>
+            <div class="setting-row">
+                <div>
+                    <div class="label">البروكسي</div>
+                    <div class="desc">خادم وكيل للتحميل (مثال: http://127.0.0.1:8080)</div>
+                </div>
+                <div class="control">
+                    <input type="text" id="proxy" placeholder="http://..." style="min-width:180px;direction:ltr;text-align:left;">
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>الكوكيز</h2>
+            <div class="setting-row">
+                <div>
+                    <div class="label">ملف الكوكيز</div>
+                    <div class="desc">للتحميل من منصات تتطلب تسجيل الدخول (YouTube, Twitter, إلخ)</div>
+                </div>
+                <div class="control file-input-wrapper">
+                    <input type="file" id="cookiesFile" accept=".txt">
+                    <label class="file-label" for="cookiesFile">اختيار ملف</label>
+                    <span class="file-name" id="cookiesFileName">لم يتم اختيار ملف</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="save-bar">
+            <div class="toast" id="toast">تم حفظ الإعدادات بنجاح ✓</div>
+            <button class="btn" id="saveBtn">حفظ الإعدادات</button>
+        </div>
+
+        <div class="card danger-zone">
+            <h2>منطقة الخطر</h2>
+            <div class="setting-row">
+                <div>
+                    <div class="label">مسح كل البيانات</div>
+                    <div class="desc">حذف كل سجل التحميلات والإحصائيات</div>
+                </div>
+                <div class="control">
+                    <button class="btn-danger" id="clearAllBtn" style="padding:8px 18px;border:none;border-radius:6px;cursor:pointer;font-family:inherit;font-size:13px;">مسح الكل</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function loadConfig() {
+            try {
+                const res = await fetch('/api/config');
+                const cfg = await res.json();
+                document.getElementById('formatSelect').value = cfg.format || 'best[ext=mp4]/best';
+                document.getElementById('maxHeight').value = cfg.max_height || 1080;
+                toggleState('subtitlesToggle', cfg.subtitles);
+                toggleState('playlistToggle', cfg.playlist);
+                document.getElementById('limitSpeed').value = cfg.limit_speed || '';
+                document.getElementById('proxy').value = cfg.proxy || '';
+                if (cfg.cookies_file) {
+                    document.getElementById('cookiesFileName').textContent = cfg.cookies_file.split(/[/\\]/).pop();
+                }
+            } catch(e) { console.error(e); }
+        }
+
+        function toggleState(id, on) {
+            const el = document.getElementById(id);
+            if (on) el.classList.add('on'); else el.classList.remove('on');
+        }
+
+        document.querySelectorAll('.toggle').forEach(toggle => {
+            toggle.addEventListener('click', () => toggle.classList.toggle('on'));
+        });
+
+        document.getElementById('cookiesFile').addEventListener('change', function() {
+            const name = this.files[0] ? this.files[0].name : 'لم يتم اختيار ملف';
+            document.getElementById('cookiesFileName').textContent = name;
+        });
+
+        document.getElementById('saveBtn').addEventListener('click', async () => {
+            const fd = new FormData();
+            fd.append('format', document.getElementById('formatSelect').value);
+            fd.append('max_height', document.getElementById('maxHeight').value);
+            fd.append('subtitles', document.getElementById('subtitlesToggle').classList.contains('on'));
+            fd.append('playlist', document.getElementById('playlistToggle').classList.contains('on'));
+            fd.append('limit_speed', document.getElementById('limitSpeed').value);
+            fd.append('proxy', document.getElementById('proxy').value);
+
+            const fileInput = document.getElementById('cookiesFile');
+            if (fileInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = async function(e) {
+                    try {
+                        const res = await fetch('/api/config', { method: 'POST', body: fd });
+                        const data = await res.json();
+                        if (data.success) showToast();
+                    } catch(e) { alert('فشل الحفظ'); }
+                };
+                reader.readAsText(fileInput.files[0]);
+            } else {
+                try {
+                    const res = await fetch('/api/config', { method: 'POST', body: fd });
+                    const data = await res.json();
+                    if (data.success) showToast();
+                } catch(e) { alert('فشل الحفظ'); }
+            }
+        });
+
+        function showToast() {
+            const toast = document.getElementById('toast');
+            toast.style.display = 'block';
+            setTimeout(() => toast.style.display = 'none', 3000);
+        }
+
+        document.getElementById('clearAllBtn').addEventListener('click', async () => {
+            if (!confirm('هل أنت متأكد؟ سيتم حذف كل سجل التحميلات.')) return;
+            if (!confirm('تأكيد نهائي؟ لا يمكن التراجع عن هذا الإجراء.')) return;
+            await fetch('/api/history/clear', { method: 'POST' });
+            showToast();
+        });
+
+        loadConfig();
+    </script>
+</body>
+</html>

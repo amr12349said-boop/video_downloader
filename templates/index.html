@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Downloader Pro</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background: #0d1117;
+            min-height: 100vh;
+            color: #e6edf3;
+        }
+        .nav {
+            background: #161b22;
+            border-bottom: 1px solid #30363d;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            height: 56px;
+            gap: 24px;
+        }
+        .nav .brand {
+            font-weight: 700;
+            font-size: 18px;
+            color: #f0e6d0;
+        }
+        .nav .brand span { color: #58a6ff; }
+        .nav a {
+            color: #8b949e;
+            text-decoration: none;
+            font-size: 14px;
+            padding: 4px 12px;
+            border-radius: 6px;
+            transition: 0.15s;
+        }
+        .nav a:hover { color: #e6edf3; background: #21262d; }
+        .nav a.active { color: #58a6ff; background: #1f2937; }
+
+        .container {
+            max-width: 780px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+        .card {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 16px;
+        }
+
+        .tabs { display: flex; gap: 4px; margin-bottom: 20px; background: #0d1117; border-radius: 10px; padding: 4px; }
+        .tab {
+            flex: 1; padding: 10px; text-align: center; border-radius: 8px;
+            cursor: pointer; font-size: 14px; font-weight: 500; color: #8b949e;
+            transition: 0.15s; border: none; background: transparent; font-family: inherit;
+        }
+        .tab:hover { color: #e6edf3; }
+        .tab.active { background: #21262d; color: #58a6ff; }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .input-row { display: flex; gap: 10px; }
+        .input-row input, .input-row textarea {
+            flex: 1; padding: 12px 16px; border: 2px solid #30363d; border-radius: 8px;
+            background: #0d1117; color: #e6edf3; font-size: 14px; transition: 0.2s;
+            direction: ltr; text-align: left; font-family: inherit;
+        }
+        .input-row input:focus, .input-row textarea:focus { outline: none; border-color: #58a6ff; }
+        .input-row input::placeholder, .input-row textarea::placeholder { color: #484f58; }
+        .input-row textarea { min-height: 120px; direction: ltr; text-align: left; resize: vertical; }
+        .input-row button {
+            padding: 12px 24px; border: none; border-radius: 8px; background: #238636;
+            color: #fff; font-weight: 600; font-size: 14px; cursor: pointer; transition: 0.2s;
+            white-space: nowrap; font-family: inherit;
+        }
+        .input-row button:hover { background: #2ea043; }
+        .input-row button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .input-row button.secondary { background: #21262d; color: #e6edf3; }
+        .input-row button.secondary:hover { background: #30363d; }
+
+        .loading { text-align: center; padding: 40px 0; display: none; }
+        .spinner {
+            width: 36px; height: 36px; border: 3px solid #21262d; border-top-color: #58a6ff;
+            border-radius: 50%; animation: spin 0.7s linear infinite; margin: 0 auto 10px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .video-card {
+            background: #0d1117; border: 1px solid #21262d; border-radius: 10px;
+            padding: 12px; display: flex; gap: 14px; margin-bottom: 14px;
+        }
+        .video-card img {
+            width: 140px; height: 90px; border-radius: 6px; object-fit: cover;
+            flex-shrink: 0; background: #21262d;
+        }
+        .video-card .info { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
+        .video-card .title { font-weight: 600; font-size: 15px; margin-bottom: 4px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .video-card .meta { font-size: 13px; color: #8b949e; }
+        .video-card .meta span + span::before { content: " | "; color: #30363d; }
+
+        .format-btn {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 14px; width: 100%; background: #0d1117; border: 1px solid #21262d;
+            border-radius: 8px; cursor: pointer; color: #e6edf3; font-size: 14px;
+            transition: 0.15s; font-family: inherit; margin-bottom: 4px;
+        }
+        .format-btn:first-of-type { background: #002d3d; border-color: #044289; }
+        .format-btn:first-of-type .quality { color: #58a6ff; }
+        .format-btn:hover { border-color: #58a6ff; background: #1c2128; }
+        .format-btn .quality { font-weight: 500; }
+        .format-btn .size { color: #8b949e; font-size: 13px; }
+
+        .progress-card {
+            background: #0d1117; border: 1px solid #21262d; border-radius: 10px;
+            padding: 16px; margin-bottom: 8px; display: none;
+        }
+        .progress-bar {
+            height: 6px; background: #21262d; border-radius: 3px; overflow: hidden; margin: 8px 0;
+        }
+        .progress-bar .fill {
+            height: 100%; width: 0%; background: linear-gradient(90deg, #238636, #2ea043);
+            border-radius: 3px; transition: width 0.3s;
+        }
+        .progress-info { display: flex; justify-content: space-between; font-size: 13px; color: #8b949e; }
+        .progress-msg { font-size: 13px; color: #8b949e; margin-bottom: 4px; }
+        .progress-title { font-size: 13px; color: #e6edf3; margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+        .download-card {
+            background: #002d3d; border: 1px solid #044289; border-radius: 10px;
+            padding: 18px; text-align: center; display: none; margin-top: 14px;
+        }
+        .download-card .check { font-size: 32px; margin-bottom: 4px; }
+        .download-card .dl-title { font-size: 14px; color: #8b949e; margin-bottom: 12px; word-break: break-all; }
+        .download-card .dl-btn {
+            display: inline-block; padding: 10px 28px; background: #238636; color: #fff;
+            font-weight: 600; font-size: 14px; border-radius: 8px; text-decoration: none; transition: 0.2s;
+        }
+        .download-card .dl-btn:hover { background: #2ea043; }
+        .download-card .path-info { margin-top: 10px; font-size: 11px; color: #484f58; direction: ltr; text-align: left; word-break: break-all; }
+
+        .error {
+            background: #3d0e0e; border: 1px solid #8b1a1a; border-radius: 8px;
+            padding: 10px 14px; color: #f85149; font-size: 14px; margin-top: 10px; display: none;
+        }
+
+        .bulk-summary {
+            background: #0d1117; border: 1px solid #21262d; border-radius: 8px;
+            padding: 12px; margin-top: 10px; font-size: 13px; display: none;
+        }
+        .bulk-item {
+            display: flex; align-items: center; gap: 8px; padding: 4px 0;
+            border-bottom: 1px solid #21262d; font-size: 12px;
+        }
+        .bulk-item:last-child { border-bottom: none; }
+        .bulk-item .status-dot {
+            width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+        }
+        .bulk-item .status-dot.queued { background: #d29922; }
+        .bulk-item .status-dot.downloading { background: #58a6ff; animation: pulse 1s infinite; }
+        .bulk-item .status-dot.completed { background: #3fb950; }
+        .bulk-item .status-dot.error { background: #f85149; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+        .bulk-item .bulk-url { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #8b949e; direction: ltr; text-align: left; }
+
+        .result { display: none; margin-top: 4px; }
+        .formats { display: grid; gap: 4px; }
+
+        .supported { text-align: center; margin-top: 20px; padding-top: 16px; border-top: 1px solid #21262d; }
+        .supported span {
+            display: inline-block; padding: 2px 10px; margin: 2px; background: #0d1117;
+            border: 1px solid #21262d; border-radius: 14px; font-size: 11px; color: #8b949e;
+        }
+
+        footer { text-align: center; margin-top: 16px; font-size: 12px; color: #484f58; }
+
+        .badge { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; background: #1f2937; color: #93c5fd; border: 1px solid #374151; }
+
+        @media (max-width: 500px) {
+            .container { padding: 16px 10px; }
+            .card { padding: 16px; }
+            .input-row { flex-direction: column; }
+            .input-row button { width: 100%; }
+            .video-card { flex-direction: column; }
+            .video-card img { width: 100%; height: 160px; }
+            .nav { padding: 0 10px; gap: 12px; }
+            .nav .brand { font-size: 15px; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav">
+        <div class="brand">Video <span>Downloader</span> Pro</div>
+        <a href="/" class="active">الرئيسية</a>
+        <a href="/history">السجل</a>
+        <a href="/settings">الإعدادات</a>
+    </nav>
+
+    <div class="container">
+        <div class="tabs">
+            <button class="tab active" data-tab="single">رابط واحد</button>
+            <button class="tab" data-tab="bulk">روابط متعددة</button>
+        </div>
+
+        <div class="tab-content active" id="tab-single">
+            <div class="card">
+                <div class="input-row">
+                    <input type="text" id="urlInput" placeholder="الصق رابط الفيديو... (YouTube, TikTok, Instagram, Facebook, Twitter, وغيرها)" dir="ltr">
+                    <button id="fetchBtn">بحث</button>
+                </div>
+            </div>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <span>جاري جلب معلومات الفيديو...</span>
+            </div>
+
+            <div class="error" id="error"></div>
+            <div class="result" id="result">
+                <div class="video-card" id="videoCard">
+                    <img id="thumbnail" src="" alt="">
+                    <div class="info">
+                        <div class="title" id="videoTitle"></div>
+                        <div class="meta" id="videoMeta">
+                            <span class="badge" id="platformBadge">منصة</span>
+                            <span id="durationDisplay"></span>
+                            <span id="uploaderDisplay"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="formats" id="formatsContainer"></div>
+            </div>
+
+            <div class="progress-card" id="progressCard">
+                <div class="progress-title" id="progressTitle"></div>
+                <div class="progress-msg" id="progressMsg">جاري التحميل...</div>
+                <div class="progress-bar"><div class="fill" id="progressFill"></div></div>
+                <div class="progress-info">
+                    <span id="progressPercent">0%</span>
+                    <span id="progressSpeed"></span>
+                </div>
+            </div>
+
+            <div class="download-card" id="downloadCard">
+                <div class="check">✓</div>
+                <div class="dl-title" id="dlTitle">تم التحميل بنجاح</div>
+                <a class="dl-btn" id="dlBtn" href="#">⬇ تحميل الفيديو</a>
+                <div class="path-info" id="pathInfo"></div>
+            </div>
+        </div>
+
+        <div class="tab-content" id="tab-bulk">
+            <div class="card">
+                <div class="input-row" style="flex-direction:column;">
+                    <textarea id="bulkUrls" placeholder="الصق الروابط هنا، كل رابط في سطر منفصل&#10;مثال:&#10;https://youtube.com/watch?v=...&#10;https://tiktok.com/@user/video/..."></textarea>
+                    <div style="display:flex;gap:8px;">
+                        <button id="bulkFetchBtn" style="flex:1;">جلب المعلومات</button>
+                        <button id="bulkDlBtn" class="secondary" style="flex:1;">تحميل الكل</button>
+                    </div>
+                </div>
+            </div>
+            <div class="bulk-summary" id="bulkSummary"></div>
+            <div id="bulkResults"></div>
+        </div>
+
+        <div class="supported">
+            <span>YouTube</span><span>TikTok</span><span>Instagram</span>
+            <span>Facebook</span><span>Twitter/X</span><span>Twitch</span>
+            <span>Vimeo</span><span>Dailymotion</span><span>Reddit</span>
+            <span>LinkedIn</span><span>Pinterest</span><span>Snapchat</span>
+            <span>+1800 منصة أخرى</span>
+        </div>
+        <footer>Video Downloader Pro v2.0 | للاستخدام الشخصي والتعليمي</footer>
+    </div>
+
+    <script>
+        // --- Tab switching ---
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+            });
+        });
+
+        // --- Elements ---
+        const urlInput = document.getElementById('urlInput');
+        const fetchBtn = document.getElementById('fetchBtn');
+        const loading = document.getElementById('loading');
+        const errorDiv = document.getElementById('error');
+        const resultDiv = document.getElementById('result');
+        const progressCard = document.getElementById('progressCard');
+        const downloadCard = document.getElementById('downloadCard');
+        const dlTitle = document.getElementById('dlTitle');
+        const dlBtn = document.getElementById('dlBtn');
+        const thumbnail = document.getElementById('thumbnail');
+        const videoTitle = document.getElementById('videoTitle');
+        const formatsContainer = document.getElementById('formatsContainer');
+        const platformBadge = document.getElementById('platformBadge');
+        const durationDisplay = document.getElementById('durationDisplay');
+        const uploaderDisplay = document.getElementById('uploaderDisplay');
+        const pathInfo = document.getElementById('pathInfo');
+        const progressFill = document.getElementById('progressFill');
+        const progressMsg = document.getElementById('progressMsg');
+        const progressPercent = document.getElementById('progressPercent');
+        const progressSpeed = document.getElementById('progressSpeed');
+        const progressTitle = document.getElementById('progressTitle');
+
+        let currentUrl = '';
+        let progressInterval = null;
+
+        function showError(msg) {
+            errorDiv.textContent = msg;
+            errorDiv.style.display = 'block';
+            resultDiv.style.display = 'none';
+            progressCard.style.display = 'none';
+            downloadCard.style.display = 'none';
+        }
+
+        function hideAllResults() {
+            errorDiv.style.display = 'none';
+            resultDiv.style.display = 'none';
+            progressCard.style.display = 'none';
+            downloadCard.style.display = 'none';
+            if (progressInterval) { clearInterval(progressInterval); progressInterval = null; }
+        }
+
+        function formatDur(secs) {
+            if (!secs) return '';
+            const m = Math.floor(secs / 60), s = secs % 60;
+            return m + ':' + s.toString().padStart(2, '0');
+        }
+
+        function formatSpd(bytes) {
+            if (!bytes) return '';
+            if (bytes > 1e9) return (bytes / 1e9).toFixed(1) + ' GB/s';
+            if (bytes > 1e6) return (bytes / 1e6).toFixed(1) + ' MB/s';
+            if (bytes > 1e3) return (bytes / 1e3).toFixed(0) + ' KB/s';
+            return bytes + ' B/s';
+        }
+
+        function trackProgress(taskId, title) {
+            if (progressInterval) clearInterval(progressInterval);
+            progressCard.style.display = 'block';
+            downloadCard.style.display = 'none';
+            progressTitle.textContent = title || 'جاري التحميل...';
+            progressFill.style.width = '0%';
+            progressPercent.textContent = '0%';
+            progressSpeed.textContent = '';
+
+            progressInterval = setInterval(async () => {
+                try {
+                    const res = await fetch('/api/progress/' + taskId);
+                    const s = await res.json();
+                    if (!s || !s.status) return;
+
+                    progressMsg.textContent = s.msg || '';
+                    if (s.percent !== undefined) {
+                        progressFill.style.width = s.percent + '%';
+                        progressPercent.textContent = s.percent + '%';
+                    }
+                    if (s.speed) progressSpeed.textContent = formatSpd(s.speed);
+
+                    if (s.status === 'completed') {
+                        clearInterval(progressInterval);
+                        progressInterval = null;
+                        progressCard.style.display = 'none';
+                        if (s.entry) showDownloadCard(s.entry);
+                    } else if (s.status === 'error') {
+                        clearInterval(progressInterval);
+                        progressInterval = null;
+                        progressCard.style.display = 'none';
+                        showError(s.msg || 'حدث خطأ أثناء التحميل');
+                    }
+                } catch(e) {}
+            }, 500);
+        }
+
+        function showDownloadCard(entry) {
+            downloadCard.style.display = 'block';
+            dlTitle.textContent = entry.title + ' - جاهز';
+            dlBtn.href = '/files/' + encodeURIComponent(entry.platform) + '/' + encodeURIComponent(entry.filename);
+            dlBtn.textContent = '⬇ تحميل ' + entry.filename;
+            pathInfo.textContent = 'المسار: ' + (entry.path || '');
+        }
+
+        // --- Single download flow ---
+        fetchBtn.addEventListener('click', async () => {
+            const url = urlInput.value.trim();
+            if (!url) { showError('الرجاء إدخال رابط الفيديو'); return; }
+            currentUrl = url;
+
+            hideAllResults();
+            loading.style.display = 'block';
+            fetchBtn.disabled = true;
+
+            try {
+                const fd = new FormData(); fd.append('url', url);
+                const res = await fetch('/api/info', { method: 'POST', body: fd });
+                const data = await res.json();
+
+                if (data.error) { showError(data.error); return; }
+
+                thumbnail.src = data.thumbnail || '';
+                videoTitle.textContent = data.title;
+                platformBadge.textContent = data.extractor || 'غير معروف';
+
+                let metaHtml = '';
+                if (data.duration) metaHtml += formatDur(data.duration);
+                if (data.uploader) metaHtml += (metaHtml ? ' | ' : '') + data.uploader;
+                document.querySelector('#videoMeta .badge').after(document.createTextNode(''));
+                durationDisplay.textContent = data.duration ? formatDur(data.duration) : '';
+                uploaderDisplay.textContent = data.uploader || '';
+
+                formatsContainer.innerHTML = '';
+                data.formats.forEach(f => {
+                    const btn = document.createElement('button');
+                    btn.className = 'format-btn';
+                    const star = f.is_best ? '\u2B50 ' : '';
+                    btn.innerHTML = '<span class="quality">' + star + f.label + '</span><span class="size">' + (f.size || '') + '</span>';
+                    btn.addEventListener('click', () => startDl(url, f.format_id));
+                    formatsContainer.appendChild(btn);
+                });
+
+                resultDiv.style.display = 'block';
+            } catch(e) { showError('حدث خطأ في الاتصال بالخادم');
+            } finally { loading.style.display = 'none'; fetchBtn.disabled = false; }
+        });
+
+        async function startDl(url, fmt) {
+            hideAllResults();
+            const fd = new FormData();
+            fd.append('url', url);
+            fd.append('format_id', fmt);
+            try {
+                const res = await fetch('/api/download', { method: 'POST', body: fd });
+                const data = await res.json();
+                if (data.error) { showError(data.error); return; }
+                trackProgress(data.task_id, url);
+            } catch(e) { showError('حدث خطأ أثناء بدء التحميل'); }
+        }
+
+        urlInput.addEventListener('keydown', e => { if (e.key === 'Enter') fetchBtn.click(); });
+
+        // --- Bulk download ---
+        const bulkUrls = document.getElementById('bulkUrls');
+        const bulkFetchBtn = document.getElementById('bulkFetchBtn');
+        const bulkDlBtn = document.getElementById('bulkDlBtn');
+        const bulkSummary = document.getElementById('bulkSummary');
+        const bulkResults = document.getElementById('bulkResults');
+
+        bulkFetchBtn.addEventListener('click', async () => {
+            const urls = bulkUrls.value.trim().split('\n').filter(u => u.trim());
+            if (!urls.length) return;
+            bulkSummary.style.display = 'block';
+            bulkSummary.innerHTML = '<div style="margin-bottom:8px;font-weight:500;">جاري جلب معلومات ' + urls.length + ' رابط...</div><div class="spinner" style="width:24px;height:24px;margin:0 auto;"></div>';
+            bulkDlBtn.disabled = false;
+        });
+
+        bulkDlBtn.addEventListener('click', async () => {
+            const urls = bulkUrls.value.trim().split('\n').filter(u => u.trim());
+            if (!urls.length) return;
+
+            bulkDlBtn.disabled = true;
+            bulkSummary.style.display = 'block';
+            bulkSummary.innerHTML = '<div style="margin-bottom:8px;font-weight:500;">جاري التحميل...</div>';
+
+            const fd = new FormData();
+            fd.append('urls', urls.join('\n'));
+            fd.append('format_id', 'best[ext=mp4]/best');
+
+            try {
+                const res = await fetch('/api/bulk', { method: 'POST', body: fd });
+                const data = await res.json();
+                if (data.error) { bulkSummary.innerHTML = '<div style="color:#f85149;">' + data.error + '</div>'; return; }
+
+                bulkSummary.innerHTML = '<div style="margin-bottom:8px;font-weight:500;">تحميل ' + data.count + ' فيديو</div>';
+
+                const tasks = data.tasks;
+                const statusEls = {};
+                const container = document.createElement('div');
+                container.style.maxHeight = '400px';
+                container.style.overflowY = 'auto';
+
+                tasks.forEach(t => {
+                    const row = document.createElement('div');
+                    row.className = 'bulk-item';
+                    row.innerHTML = '<span class="status-dot queued"></span><span class="bulk-url">' + t.url + '</span><span style="font-size:11px;color:#8b949e;width:50px;text-align:left;" class="bulk-status">في الانتظار</span>';
+                    container.appendChild(row);
+                    statusEls[t.task_id] = {
+                        dot: row.querySelector('.status-dot'),
+                        label: row.querySelector('.bulk-status'),
+                    };
+                });
+                bulkSummary.appendChild(container);
+
+                tasks.forEach(t => pollBulkTask(t.task_id, statusEls[t.task_id]));
+            } catch(e) {
+                bulkSummary.innerHTML = '<div style="color:#f85149;">خطأ: ' + e.message + '</div>';
+            } finally { bulkDlBtn.disabled = false; }
+        });
+
+        function pollBulkTask(taskId, els) {
+            let attempts = 0;
+            const maxAttempts = 600;
+            const iv = setInterval(async () => {
+                attempts++;
+                if (attempts > maxAttempts) {
+                    clearInterval(iv);
+                    els.dot.className = 'status-dot error';
+                    els.label.textContent = 'انتهاء الوقت';
+                    return;
+                }
+                try {
+                    const res = await fetch('/api/progress/' + taskId);
+                    const s = await res.json();
+                    if (!s || !s.status) return;
+
+                    if (s.status === 'queued') {
+                        els.dot.className = 'status-dot queued';
+                        els.label.textContent = 'في الانتظار';
+                    } else if (s.status === 'fetching' || s.status === 'downloading') {
+                        els.dot.className = 'status-dot downloading';
+                        els.label.textContent = (s.percent || 0) + '%';
+                    } else if (s.status === 'completed') {
+                        clearInterval(iv);
+                        els.dot.className = 'status-dot completed';
+                        els.label.textContent = 'تم ✓';
+                    } else if (s.status === 'error') {
+                        clearInterval(iv);
+                        els.dot.className = 'status-dot error';
+                        els.label.textContent = 'خطأ';
+                    }
+                } catch(e) {}
+            }, 800);
+        }
+    </script>
+</body>
+</html>

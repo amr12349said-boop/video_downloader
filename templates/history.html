@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سجل التحميلات - Video Downloader Pro</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background: #0d1117;
+            min-height: 100vh;
+            color: #e6edf3;
+        }
+        .nav {
+            background: #161b22; border-bottom: 1px solid #30363d; padding: 0 20px;
+            display: flex; align-items: center; height: 56px; gap: 24px;
+        }
+        .nav .brand { font-weight: 700; font-size: 18px; color: #f0e6d0; }
+        .nav .brand span { color: #58a6ff; }
+        .nav a { color: #8b949e; text-decoration: none; font-size: 14px; padding: 4px 12px; border-radius: 6px; transition: 0.15s; }
+        .nav a:hover { color: #e6edf3; background: #21262d; }
+        .nav a.active { color: #58a6ff; background: #1f2937; }
+
+        .container { max-width: 860px; margin: 0 auto; padding: 30px 20px; }
+
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+        .header h1 { font-size: 22px; }
+        .header .stats { display: flex; gap: 16px; font-size: 14px; color: #8b949e; }
+        .header .stats span { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 6px 14px; }
+        .header .stats strong { color: #e6edf3; }
+
+        .search-bar { display: flex; gap: 8px; margin-bottom: 16px; }
+        .search-bar input {
+            flex: 1; padding: 10px 14px; border: 2px solid #30363d; border-radius: 8px;
+            background: #0d1117; color: #e6edf3; font-size: 14px; font-family: inherit;
+        }
+        .search-bar input:focus { outline: none; border-color: #58a6ff; }
+        .search-bar button {
+            padding: 10px 18px; border: none; border-radius: 8px; background: #21262d;
+            color: #e6edf3; font-weight: 500; cursor: pointer; font-size: 13px; font-family: inherit;
+        }
+        .search-bar button:hover { background: #30363d; }
+        .search-bar button.danger { background: #3d0e0e; color: #f85149; }
+        .search-bar button.danger:hover { background: #5c1414; }
+
+        .history-list { display: grid; gap: 6px; }
+        .history-item {
+            background: #161b22; border: 1px solid #21262d; border-radius: 8px;
+            padding: 12px 16px; display: flex; align-items: center; gap: 12px; transition: 0.15s;
+        }
+        .history-item:hover { border-color: #30363d; }
+        .history-item .platform-badge {
+            background: #1f2937; color: #93c5fd; border: 1px solid #374151;
+            padding: 2px 10px; border-radius: 10px; font-size: 11px; font-weight: 600; white-space: nowrap;
+        }
+        .history-item .info { flex: 1; min-width: 0; }
+        .history-item .title { font-size: 14px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .history-item .meta { font-size: 12px; color: #8b949e; margin-top: 2px; }
+        .history-item .meta span + span::before { content: " | "; color: #30363d; }
+        .history-item .actions { display: flex; gap: 6px; flex-shrink: 0; }
+        .history-item .actions a {
+            padding: 4px 12px; border-radius: 6px; font-size: 12px; text-decoration: none;
+            background: #21262d; color: #58a6ff; transition: 0.15s;
+        }
+        .history-item .actions a:hover { background: #1f2937; }
+
+        .empty { text-align: center; padding: 60px 20px; color: #484f58; }
+        .empty .icon { font-size: 48px; margin-bottom: 12px; }
+        .empty p { font-size: 14px; }
+
+        .platform-filter { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+        .platform-filter button {
+            padding: 4px 12px; border: 1px solid #21262d; border-radius: 14px;
+            background: #0d1117; color: #8b949e; font-size: 12px; cursor: pointer; transition: 0.15s; font-family: inherit;
+        }
+        .platform-filter button:hover { border-color: #30363d; color: #e6edf3; }
+        .platform-filter button.active { background: #1f2937; border-color: #58a6ff; color: #58a6ff; }
+
+        .pagination { display: flex; justify-content: center; gap: 6px; margin-top: 20px; }
+        .pagination button {
+            padding: 6px 14px; border: 1px solid #21262d; border-radius: 6px;
+            background: #161b22; color: #e6edf3; cursor: pointer; font-size: 13px; font-family: inherit;
+        }
+        .pagination button:hover { border-color: #30363d; }
+        .pagination button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        @media (max-width: 500px) {
+            .container { padding: 16px 10px; }
+            .header { flex-direction: column; align-items: flex-start; }
+            .history-item { flex-direction: column; align-items: flex-start; }
+            .history-item .actions { width: 100%; }
+            .history-item .actions a { flex: 1; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav">
+        <div class="brand">Video <span>Downloader</span> Pro</div>
+        <a href="/">الرئيسية</a>
+        <a href="/history" class="active">السجل</a>
+        <a href="/settings">الإعدادات</a>
+    </nav>
+
+    <div class="container">
+        <div class="header">
+            <h1>سجل التحميلات</h1>
+            <div class="stats">
+                <span>الإجمالي: <strong id="totalCount">0</strong></span>
+                <span>المنصات: <strong id="platformCount">0</strong></span>
+            </div>
+        </div>
+
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="ابحث في السجل..." dir="rtl">
+            <button id="clearBtn" class="danger">مسح الكل</button>
+        </div>
+
+        <div class="platform-filter" id="platformFilter"></div>
+
+        <div class="history-list" id="historyList"></div>
+
+        <div class="pagination" id="pagination">
+            <button id="prevPage" disabled>السابق</button>
+            <span id="pageInfo" style="color:#8b949e;font-size:13px;padding:6px 10px;">1</span>
+            <button id="nextPage">التالي</button>
+        </div>
+
+        <div class="empty" id="emptyState" style="display:none;">
+            <div class="icon">📂</div>
+            <p>لا توجد تحميلات سابقة</p>
+            <p style="margin-top:4px;font-size:12px;">قم بتحميل فيديو وسيظهر هنا</p>
+        </div>
+    </div>
+
+    <script>
+        let allHistory = [];
+        let filteredHistory = [];
+        let currentPage = 1;
+        const pageSize = 20;
+        let selectedPlatform = '';
+
+        async function loadHistory() {
+            try {
+                const res = await fetch('/api/history?limit=200');
+                allHistory = await res.json();
+                buildFilters();
+                filterAndRender();
+                const statsRes = await fetch('/api/stats');
+                const stats = await statsRes.json();
+                document.getElementById('totalCount').textContent = stats.total_downloads;
+                document.getElementById('platformCount').textContent = stats.total_platforms;
+            } catch(e) {
+                document.getElementById('historyList').innerHTML = '<div class="empty" style="display:block;"><p style="color:#f85149;">فشل تحميل السجل</p></div>';
+            }
+        }
+
+        function buildFilters() {
+            const platforms = [...new Set(allHistory.map(h => h.platform).filter(Boolean))];
+            const container = document.getElementById('platformFilter');
+            container.innerHTML = '<button class="active" data-p="">الكل</button>';
+            platforms.forEach(p => {
+                const btn = document.createElement('button');
+                btn.textContent = p;
+                btn.dataset.p = p;
+                container.appendChild(btn);
+            });
+            container.querySelectorAll('button').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    container.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    selectedPlatform = btn.dataset.p;
+                    currentPage = 1;
+                    filterAndRender();
+                });
+            });
+        }
+
+        function filterAndRender() {
+            const q = document.getElementById('searchInput').value.trim().toLowerCase();
+            filteredHistory = allHistory.filter(h => {
+                if (selectedPlatform && h.platform !== selectedPlatform) return false;
+                if (q && !(h.title || '').toLowerCase().includes(q) && !(h.url || '').toLowerCase().includes(q)) return false;
+                return true;
+            });
+            currentPage = 1;
+            renderPage();
+        }
+
+        function renderPage() {
+            const list = document.getElementById('historyList');
+            const empty = document.getElementById('emptyState');
+
+            if (!filteredHistory.length) {
+                list.innerHTML = '';
+                empty.style.display = 'block';
+                document.getElementById('pagination').style.display = 'none';
+                return;
+            }
+            empty.style.display = 'none';
+            document.getElementById('pagination').style.display = 'flex';
+
+            const start = (currentPage - 1) * pageSize;
+            const end = Math.min(start + pageSize, filteredHistory.length);
+            const page = filteredHistory.slice(start, end);
+
+            list.innerHTML = page.map(h => {
+                const p = h.platform || 'Unknown';
+                const time = h.time || '';
+                const size = h.size || '';
+                const dur = h.duration || '';
+                const title = h.title || 'فيديو';
+                const url = h.url || '#';
+                const filename = h.filename || '';
+                const fpath = h.path || '';
+                return '<div class="history-item">'
+                    + '<span class="platform-badge">' + p + '</span>'
+                    + '<div class="info">'
+                    + '<div class="title" title="' + title.replace(/"/g,'&quot;') + '">' + title + '</div>'
+                    + '<div class="meta">'
+                    + (time ? '<span>' + time + '</span>' : '')
+                    + (size ? '<span>' + size + '</span>' : '')
+                    + (dur ? '<span>' + dur + '</span>' : '')
+                    + '</div></div>'
+                    + '<div class="actions">'
+                    + (url !== '#' ? '<a href="' + url + '" target="_blank">الرابط</a>' : '')
+                    + (filename ? '<a href="/files/' + encodeURIComponent(p) + '/' + encodeURIComponent(filename) + '">تحميل</a>' : '')
+                    + '</div></div>';
+            }).join('');
+
+            document.getElementById('pageInfo').textContent = currentPage + ' / ' + Math.max(1, Math.ceil(filteredHistory.length / pageSize));
+            document.getElementById('prevPage').disabled = currentPage <= 1;
+            document.getElementById('nextPage').disabled = end >= filteredHistory.length;
+        }
+
+        document.getElementById('searchInput').addEventListener('input', () => { currentPage = 1; filterAndRender(); });
+        document.getElementById('prevPage').addEventListener('click', () => { if (currentPage > 1) { currentPage--; renderPage(); } });
+        document.getElementById('nextPage').addEventListener('click', () => {
+            const maxPage = Math.ceil(filteredHistory.length / pageSize);
+            if (currentPage < maxPage) { currentPage++; renderPage(); }
+        });
+
+        document.getElementById('clearBtn').addEventListener('click', async () => {
+            if (!confirm('هل أنت متأكد من مسح كل سجل التحميلات؟')) return;
+            await fetch('/api/history/clear', { method: 'POST' });
+            loadHistory();
+        });
+
+        loadHistory();
+    </script>
+</body>
+</html>
