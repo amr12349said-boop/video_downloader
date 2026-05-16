@@ -118,7 +118,7 @@ def download_worker(url, format_id, task_id, opts_extra=None):
     fmt = format_id or cfg['format']
     try:
         write_status(task_id, {'status': 'fetching', 'msg': 'جاري جلب معلومات الفيديو...'})
-        with yt_dlp.YoutubeDL({'quiet': True, 'no_warnings': True}) as ydl:
+        with yt_dlp.YoutubeDL({'quiet': True, 'no_warnings': True, 'extractor_args': {'youtube': {'player_client': ['android']}}}) as ydl:
             info = ydl.extract_info(url, download=False)
 
         platform_dir = get_platform_dir(info.get('extractor_key', 'Unknown'))
@@ -140,6 +140,7 @@ def download_worker(url, format_id, task_id, opts_extra=None):
             'no_warnings': True,
             'progress_hooks': [progress_callback(task_id)],
             'embedmetadata': True,
+            'extractor_args': {'youtube': {'player_client': ['android']}},
         }
 
         if cfg.get('subtitles'):
@@ -217,7 +218,7 @@ def get_info():
     if not url:
         return jsonify({'error': 'الرجاء إدخال رابط الفيديو'}), 400
     try:
-        with yt_dlp.YoutubeDL({'quiet': True, 'no_warnings': True}) as ydl:
+        with yt_dlp.YoutubeDL({'quiet': True, 'no_warnings': True, 'extractor_args': {'youtube': {'player_client': ['android']}}}) as ydl:
             info = ydl.extract_info(url, download=False)
 
         formats = []
