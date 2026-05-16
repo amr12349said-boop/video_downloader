@@ -8,7 +8,12 @@ history_web.json
 history.json
 cookies.txt
 export_cookies.py
-check_schema.py
+export_cookies.bat
+check_*.py
+debug_*.py
+decrypt_*.py
+extract_*.py
+selenium_*.py
 deploy.html
 *.mp4
 *.webm
