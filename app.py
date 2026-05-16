@@ -371,6 +371,13 @@ def config_api():
                     cfg[key] = int(val)
                 else:
                     cfg[key] = val
+        cookies_content = request.form.get('cookies_content', '')
+        if cookies_content:
+            cookies_dir = BASE_DIR / '.cookies'
+            cookies_dir.mkdir(exist_ok=True)
+            cookies_path = cookies_dir / 'cookies.txt'
+            cookies_path.write_text(cookies_content, encoding='utf-8')
+            cfg['cookies_file'] = str(cookies_path)
         save_config(cfg)
         return jsonify({'success': True})
     return jsonify(get_config())

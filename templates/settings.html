@@ -258,6 +258,7 @@
             if (fileInput.files[0]) {
                 const reader = new FileReader();
                 reader.onload = async function(e) {
+                    fd.append('cookies_content', e.target.result);
                     try {
                         const res = await fetch('/api/config', { method: 'POST', body: fd });
                         const data = await res.json();
