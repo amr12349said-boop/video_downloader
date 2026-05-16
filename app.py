@@ -31,6 +31,13 @@ download_queue = queue.Queue()
 active_downloads = {}
 download_progress = {}
 
+YDL_COMMON = {
+    'quiet': True,
+    'no_warnings': True,
+    'extractor_args': {'youtube': {'player_client': ['android', 'web']}},
+    'extractor_retries': 3,
+}
+
 def get_config():
     if CONFIG_FILE.exists():
         with open(CONFIG_FILE, encoding="utf-8") as f:
@@ -118,7 +125,7 @@ def download_worker(url, format_id, task_id, opts_extra=None):
     fmt = format_id or cfg['format']
     try:
         write_status(task_id, {'status': 'fetching', 'msg': 'جاري جلب معلومات الفيديو...'})
-        with yt_dlp.YoutubeDL({'quiet': True, 'no_warnings': True, 'extractor_args': {'youtube': {'player_client': ['android']}}}) as ydl:
+        with yt_dlp.YoutubeDL({**YDL_COMMON}) as ydl:
             info = ydl.extract_info(url, download=False)
 
         platform_dir = get_platform_dir(info.get('extractor_key', 'Unknown'))
@@ -133,14 +140,12 @@ def download_worker(url, format_id, task_id, opts_extra=None):
         output_template = str(platform_dir / temp_filename)
 
         opts = {
+            **YDL_COMMON,
             'outtmpl': output_template,
             'format': fmt,
             'merge_output_format': 'mp4',
-            'quiet': True,
-            'no_warnings': True,
             'progress_hooks': [progress_callback(task_id)],
             'embedmetadata': True,
-            'extractor_args': {'youtube': {'player_client': ['android']}},
         }
 
         if cfg.get('subtitles'):
@@ -218,7 +223,7 @@ def get_info():
     if not url:
         return jsonify({'error': 'الرجاء إدخال رابط الفيديو'}), 400
     try:
-        with yt_dlp.YoutubeDL({'quiet': True, 'no_warnings': True, 'extractor_args': {'youtube': {'player_client': ['android']}}}) as ydl:
+        with yt_dlp.YoutubeDL({**YDL_COMMON}) as ydl:
             info = ydl.extract_info(url, download=False)
 
         formats = []
