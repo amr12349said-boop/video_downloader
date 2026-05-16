@@ -48,9 +48,10 @@ YOUTUBE_CLIENTS = [
 
 def ydl_extract(url, download=False, opts_extra=None):
     for client in YOUTUBE_CLIENTS:
-        opts = {**YDL_COMMON, 'extractor_args': client}
+        opts = {**YDL_COMMON}
         if opts_extra:
             opts.update(opts_extra)
+        opts['extractor_args'] = client
         try:
             with yt_dlp.YoutubeDL(opts) as ydl:
                 return ydl.extract_info(url, download=download)
