@@ -6,6 +6,10 @@ downloads/
 config_web.json
 history_web.json
 history.json
+cookies.txt
+export_cookies.py
+check_schema.py
+deploy.html
 *.mp4
 *.webm
 *.mkv
