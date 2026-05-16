@@ -7,6 +7,8 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.urandom(24).hex()
 
 BASE_DIR = Path.home() / "Desktop" / "تجميل الفديوهات"
+if not (Path.home() / "Desktop").exists():
+    BASE_DIR = Path(__file__).parent / "downloads"
 BASE_DIR.mkdir(exist_ok=True)
 CONFIG_FILE = BASE_DIR / "config_web.json"
 HISTORY_FILE = BASE_DIR / "history_web.json"
@@ -399,11 +401,13 @@ def serve_file(platform, filename):
     return send_from_directory(str(platform_dir), filename, as_attachment=True)
 
 if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 5000))
+    debug = os.environ.get('FLASK_DEBUG', '1') == '1'
     print('=' * 50)
     print('  Video Downloader Pro - Web Interface')
     print('  أداة تحميل الفيديوهات من جميع المنصات')
     print('=' * 50)
     print(f'  الحفظ في: {BASE_DIR}')
-    print(f'  افتح: http://localhost:5000')
+    print(f'  افتح: http://localhost:{port}')
     print('=' * 50)
-    app.run(host='0.0.0.0', port=5000, debug=True, threaded=True)
+    app.run(host='0.0.0.0', port=port, debug=debug, threaded=True)
